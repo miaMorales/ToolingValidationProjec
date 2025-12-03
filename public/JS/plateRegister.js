@@ -191,9 +191,6 @@ document.addEventListener("DOMContentLoaded", () => {
         enableNextStep(plVerSelect, true);
     });
 
-    // ==========================================================
-    //  INICIO DE LÓGICA DE VALIDACIÓN DE SUBMIT
-    // ==========================================================
     registroForm.addEventListener("submit", async (event) => {
         event.preventDefault();
         clearAllErrors();

@@ -1,5 +1,4 @@
 // public/JS/login.js
-
 document.addEventListener('DOMContentLoaded', () => {
     const loginForm = document.getElementById('loginForm');
     const employeeInput = document.getElementById('no_employee');

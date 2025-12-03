@@ -105,7 +105,6 @@ async function updateStencilAndLogHistory(id, newData, user) { // <-- 1. Se aña
 
       // REGLA 1: Si SÓLO cambiaron los ciclos (y no el status, y no hubo comentario manual)
       if (cyclesChanged && !statusChanged && !manualCommentAdded) {
-          // ¡Ajusta 'user.no_empleado' a tu campo de token real!
           responsible = user?.no_employee || "SYS_CYC"; // Fallback si el user no está
       } else {
           // REGLA 2: Para CUALQUIER OTRA combinación (status, comentario, o ambos)
@@ -284,7 +283,7 @@ async function createStencil(data) {
       data.st_ver,
       data.st_side,
       data.thickness,
-      'OK', // <-- AQUÍ ESTÁ EL CAMBIO (antes era 'Registrado desde módulo Plate')
+      'OK', 
       data.current_us,
       data.mx_us,
       data.arrived_date,

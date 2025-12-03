@@ -15,9 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const statusCheckboxes = document.querySelectorAll(".status-check");
     let originalStatus = "";
 
-    // ==========================================================
-    //  --- CAMBIO 1: AÑADIR LA FUNCIÓN DE AYUDA (HELPER) ---
-    // ==========================================================
+
     /**
      * Esta función usa authFetch para cargar una imagen protegida por token.
      * @param {HTMLImageElement} imgElement El elemento <img> que queremos cargar.
@@ -31,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await authFetch(url);
             if (!response.ok) throw new Error('No se pudo cargar la imagen QR');
 
-            // 2. Convertimos la respuesta en un "Blob" (un archivo en memoria)
+            // 2. Convertimos la respuesta en un blob
             const imageBlob = await response.blob();
 
             // 3. Creamos una URL local para ese Blob
@@ -44,14 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
             imgElement.alt = "Error al cargar QR"; // Mostramos un error en la imagen
         }
     }
-    // ==========================================================
-    //  FIN DEL CAMBIO 1
-    // ==========================================================
 
-
-    // ==========================================================
-    //  Limpieza de Modal al Cerrar (Esto está bien como estaba)
-    // ==========================================================
     editModalEl.addEventListener("hidden.bs.modal", () => {
         const editForm = document.getElementById("editSqueegeeForm");
         if (editForm) {
@@ -90,10 +81,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (lengthErrorEl) lengthErrorEl.style.display = "none";
         });
     });
-    // ==========================================================
-    //  FIN DE LIMPIEZA DE MODAL
-    // ==========================================================
-
 
     /**
      * Filtra una tabla del lado del cliente, ocultando las filas que no coinciden.
@@ -185,9 +172,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     tr.classList.add('table-warning');
                 }
 
-                // ==========================================================
-                //  --- CAMBIO 2: USAR data-src Y 'lazy-qr' EN LA TABLA ---
-                // ==========================================================
                 tr.innerHTML = `
                     <td>${squeegee.sq_id}</td>
                     <td>${squeegee.sq_length}</td>
@@ -207,9 +191,6 @@ document.addEventListener('DOMContentLoaded', () => {
                       </button>
                     </td>
                 `;
-                // ==========================================================
-                //  FIN DEL CAMBIO 2
-                // ==========================================================
                 
                 adminTableBody.appendChild(tr);
             });
@@ -310,7 +291,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- Lógica de Filtros (Sin cambios) ---
     document
         .querySelectorAll("#filter-row-admin .table-filter-admin")
         .forEach((input) => {
@@ -429,9 +409,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-
-    // --- Setup de Listeners ---
-
     // 1. Escuchador de la tabla de Administración para el Modal
     document.querySelector("#administracion-content .squeegee-table tbody")
         .addEventListener("click", async (event) => {
@@ -446,10 +423,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             document.getElementById("edit-sq-id").value = squeegee.sq_id;
             document.getElementById("edit-barcode").textContent = squeegee.sq_bc;
-            
-            // ==========================================================
-            //  --- CAMBIO 3: USAR 'loadProtectedImage' EN EL MODAL ---
-            // ==========================================================
+
             // document.getElementById("edit-qr-code").src = `/api/squeegees/${squeegee.sq_id}/qr`; // <-- LÍNEA ANTIGUA
             
             const qrImgElement = document.getElementById("edit-qr-code");
@@ -457,9 +431,6 @@ document.addEventListener('DOMContentLoaded', () => {
             qrImgElement.alt = "Cargando QR...";
             qrImgElement.dataset.src = `/api/squeegees/${squeegee.sq_id}/qr`;
             loadProtectedImage(qrImgElement);
-            // ==========================================================
-            //  FIN DEL CAMBIO 3
-            // ==========================================================
 
             document.getElementById("edit-current-cycles").value = squeegee.sq_current_us;
             document.getElementById("edit-max-cycles").value = squeegee.sq_mx_us;
@@ -471,12 +442,12 @@ document.addEventListener('DOMContentLoaded', () => {
             editModal.show();
         });
 
-    // 2. Lógica para guardar los cambios (Sin cambios)
+    // 2. Lógica para guardar los cambios
     document.getElementById("saveChangesBtn").addEventListener("click", async () => {
         const squeegeeId = document.getElementById("edit-sq-id").value;
         
         // ==========================================================
-        //  VALIDACIÓN CON LONGITUD (Esto está bien como estaba)
+        //  VALIDACIÓN CON LONGITUD 
         // ==========================================================
         let isValid = true;
 
@@ -535,10 +506,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 return; // Detiene el guardado
             }
         }
-        // ==========================================================
-        //  FIN DE LA VALIDACIÓN
-        // ==========================================================
-
 
         const dataToUpdate = {
             currentCycles: document.getElementById("edit-current-cycles").value,
@@ -575,7 +542,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 3. Lógica de Pestañas (Sin cambios)
+    // 3. Lógica de Pestañas
     const tabs = document.querySelectorAll('#squeegee-tabs .nav-link');
     const contentPanels = document.querySelectorAll('.tab-content-panel');
 
@@ -600,6 +567,5 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // --- CARGA INICIAL DE DATOS --- 
     loadSqueegees();
 });

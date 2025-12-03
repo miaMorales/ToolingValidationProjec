@@ -30,9 +30,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (targetId === '#history-content') {
                 loadProductionLogs();
-            } else if (targetId === '#alerts-content') { // <-- (INICIO) AÑADIR ESTE ELSE IF
+            } else if (targetId === '#alerts-content') { 
                 loadMaintenanceAlerts();
-            } // <-- (FIN) AÑADIR ESTE ELSE IF
+            } 
             else if (targetId === '#scan-content') {
                 resetState();
             }
@@ -48,7 +48,7 @@ async function loadMaintenanceAlerts() {
         
         alertsTableBody.innerHTML = ''; // Limpiar la tabla
 
-        // --- LÓGICA DEL BADGE (CÍRCULO ROJO) ---
+        // --- LÓGICA DEL CÍRCULO ROJO ---
         // Filtramos solo las 'new' para contarlas
         const newAlerts = alerts.filter(alert => alert.status === 'new');
 
@@ -70,10 +70,9 @@ async function loadMaintenanceAlerts() {
                 const tr = document.createElement('tr');
                 const timestamp = new Date(alert.alert_timestamp).toLocaleString('es-MX');
 
-                // --- ¡AQUÍ ESTÁ LA MAGIA! ---
                 // Si la alerta es 'new', pintamos la fila de rojo
                 if (alert.status === 'new') {
-                    tr.classList.add('table-danger'); // Bootstrap clase para fila roja
+                    tr.classList.add('table-danger'); 
                 }
 
                 tr.innerHTML = `
@@ -87,7 +86,7 @@ async function loadMaintenanceAlerts() {
             });
 
         } else {
-            // Si no hay NINGUNA alerta (ni nueva ni resuelta), mostramos el mensaje
+            // Si no hay NINGUNA alerta mostramos el mensaje
             const tr = document.createElement('tr');
             tr.innerHTML = `<td colspan="5" class="text-center text-muted">No hay historial de alertas.</td>`;
             alertsTableBody.appendChild(tr);
@@ -184,7 +183,6 @@ async function loadMaintenanceAlerts() {
     }
     
     async function handleScan() {
-        // La lógica interna de esta función no cambia
         const barcode = scannerInput.value.trim();
         if (!barcode) return;
         try {
@@ -215,7 +213,6 @@ async function loadMaintenanceAlerts() {
     }
 
     async function logFinalResult() {
-        // La lógica interna de esta función no cambia
         scanPrompt.textContent = 'Proceso de validación completo. Registrando...';
         try {
             const response = await authFetch('/api/validation/log', {
@@ -234,7 +231,6 @@ async function loadMaintenanceAlerts() {
         }
     }
 
-    // --- Event Listeners Actualizados ---
     lineCarousel.addEventListener('click', (event) => {
         const card = event.target.closest('.line-card');
         if (card) {
@@ -269,8 +265,8 @@ async function loadMaintenanceAlerts() {
     // Iniciar
     resetState();
 
-// ==========================================
-    // LÓGICA PARA VERIFICACIÓN DE PASTA (NUEVO)
+    // ==========================================
+    // LÓGICA PARA VERIFICACIÓN DE PASTA 
     // ==========================================
     const pastaLineSel = document.getElementById('pasta-line-selection');
     const pastaScanView = document.getElementById('pasta-scan-view');
@@ -309,8 +305,8 @@ async function loadMaintenanceAlerts() {
 
             try {
                 // Llamada al endpoint que creamos arriba
-                // NOTA: Asegúrate de enviar el username (quizás lo tienes en localStorage o global)
-                // Aquí asumo que tienes una forma de obtener el usuario, si no, usa 'Operador'
+                // NOTA: Asegúrate de enviar el username (localStorage o global)
+
                 const username = localStorage.getItem('username') || 'Operador'; 
 
                 const response = await authFetch('/api/validation/check-pasta', {

@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const deselectAllBtn = document.getElementById("deselect-all-btn");
 
   let allTools = []; // Para guardar todas las herramientas cargadas
-  let selectedToolIds = new Set(); // <-- CAMBIO: Almacén para guardar las selecciones (guardará el ID único, ej: "tool-stencil-4")
+  let selectedToolIds = new Set(); 
 
   /**
    * Carga todas las herramientas (stencils, plates, squeegees) desde el backend.
@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const plates = await platesRes.json();
       const squeegees = await squeegeesRes.json();
 
-      // Combinar y añadir tipo
+
       allTools = [
         ...stencils.map((s) => ({
           ...s,
@@ -56,7 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
         })),
       ];
 
-      // Ordenar (opcional, por tipo y luego ID)
+      // Ordenar (por tipo y luego ID)
       allTools.sort((a, b) => {
         if (a.type < b.type) return -1;
         if (a.type > b.type) return 1;
@@ -86,7 +86,7 @@ document.addEventListener("DOMContentLoaded", () => {
     toolsToDisplay.forEach((tool) => {
       const div = document.createElement("div");
       div.className = "tool-list-item";
-      // Este es el ID único (ej: "tool-stencil-4")
+      
       const inputId = `tool-${tool.type}-${tool.id}`;
       let labelText = "";
       switch (tool.type) {
@@ -111,7 +111,7 @@ document.addEventListener("DOMContentLoaded", () => {
           labelText = `Herramienta Desconocida #${tool.id}`;
       }
 
-      // --- CAMBIO: Comprobar si el ID *único* está en el Set de seleccionados ---
+      
       const isChecked = selectedToolIds.has(inputId);
 
       div.innerHTML = `
@@ -161,7 +161,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- CAMBIO: Actualizar el Set usando el ID *único* del input ---
   toolListContainer.addEventListener("change", (event) => {
     if (event.target.classList.contains("tool-checkbox")) {
-      const uniqueId = event.target.id; // <-- Usar el ID del elemento (ej: "tool-stencil-4")
+      const uniqueId = event.target.id; 
       if (event.target.checked) {
         selectedToolIds.add(uniqueId); // Añadir al Set
       } else {
@@ -181,7 +181,7 @@ document.addEventListener("DOMContentLoaded", () => {
     updateGenerateButtonState();
   });
 
-  // --- CAMBIO: Deseleccionar Todos (usa el ID único) ---
+  
   deselectAllBtn.addEventListener("click", () => {
     const checkboxes = toolListContainer.querySelectorAll(".tool-checkbox");
     checkboxes.forEach((cb) => {
@@ -191,7 +191,6 @@ document.addEventListener("DOMContentLoaded", () => {
     updateGenerateButtonState();
   });
 
-  // --- CAMBIO: Generar Excel (leer el Set y separar los IDs) ---
   generatePdfBtn.addEventListener("click", async () => {
     const selectedTools = [];
     // Iterar sobre el Set de IDs únicos

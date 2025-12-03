@@ -88,9 +88,7 @@ async function getBajaSqueegees() {
 
 // --- Edición y Log ---
 
-// --- Edición y Log ---
-
-async function updateSqueegeeAndLogHistory(id, newData, user) { // <-- 1. Se añade 'user'
+async function updateSqueegeeAndLogHistory(id, newData, user) { 
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
@@ -100,9 +98,6 @@ async function updateSqueegeeAndLogHistory(id, newData, user) { // <-- 1. Se añ
 
     if (!originalSqueegee) throw new Error('Squeegee no encontrado');
 
-    // ====================================================================
-    //  CAMBIO EN LÓGICA DE HISTORIAL (Lógica de Responsable Corregida)
-    // ====================================================================
     let needsHistoryRecord = false;
     let historyComment = ''; // Inicia vacío
 
@@ -127,9 +122,6 @@ async function updateSqueegeeAndLogHistory(id, newData, user) { // <-- 1. Se añ
       needsHistoryRecord = true;
       historyComment += (historyComment ? ' ' : '') + `(Ciclos actualizados: ${originalSqueegee.sq_current_us} -> ${newData.currentCycles})`; //
     }
-    // ====================================================================
-    //  FIN DEL CAMBIO
-    // ====================================================================
 
     const updateSql = `
       UPDATE squeegees 
@@ -151,19 +143,15 @@ async function updateSqueegeeAndLogHistory(id, newData, user) { // <-- 1. Se añ
 
       // REGLA 1: Si SÓLO cambiaron los ciclos (y no el status, y no hubo comentario manual)
       if (cyclesChanged && !statusChanged && !manualCommentAdded) {
-          // ¡Ajusta 'user.no_empleado' a tu campo de token real!
+
           responsible = user?.no_employee || "SYS_CYC"; // Fallback si el user no está
       } else {
           // REGLA 2: Para CUALQUIER OTRA combinación (status, comentario, o ambos)
           responsible = newData.history?.responsible || "SYS_MAN"; //
       }
-      // ====================================================================
-      //  FIN DE LÓGICA DE RESPONSABLE
-      // ====================================================================
 
       const date = newData.history?.date || new Date(); //
 
-      // Usa el historyComment actualizado
       await client.query(historySql, [id, date, newData.status, historyComment.trim(), responsible]); //
     }
 

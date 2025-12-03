@@ -41,14 +41,12 @@ async function validateScan(step, barcode, context) {
 
         case 'plate':
             // Lógica de Plate (sin cambios)
-// Lógica de Plate MODIFICADA
             query = 'SELECT pn_pcb, pl_status FROM plates WHERE pl_bc = $1';
             const { rows: plateRows } = await pool.query(query, [barcode]);
             const plate = plateRows[0];
             if (!plate) throw new Error('Plate no encontrado.');
             if (plate.pl_status !== 'OK') throw new Error(`El status del Plate es ${plate.pl_status}, se requiere "OK".`);
             
-            // --- AQUÍ ESTÁ LA MAGIA ---
             // Si el modelo tiene un 'plate_pcb' específico definido por el admin, usamos ese.
             // Si es null/vacío, usamos el pn_pcb del contexto (comportamiento normal).
             const requiredPlatePcb = model.plate_pcb || context.pn_pcb;
@@ -61,29 +59,33 @@ async function validateScan(step, barcode, context) {
             return { success: true };
             
         // --- LÓGICA MODIFICADA PARA EXTRAER VALOR DE PASTA ---
-        case 'pasta':
+case 'pasta':
             if (!barcode) {
                 throw new Error('No se escaneó el barcode de la pasta.');
             }
 
-            // 1. Dividimos el barcode escaneado por la coma
-            const parts = barcode.split(',');
-
-            // 2. Verificamos que el formato sea correcto (al menos dos partes)
-            if (parts.length < 2) {
-                throw new Error(`Formato de pasta escaneada incorrecto. Se esperaba un formato con comas, pero se recibió "${barcode}".`);
+            // 1. VALIDACIÓN ESTRICTA: Debe tener comas (DataMatrix)
+            if (!barcode.includes(',')) {
+                throw new Error("Formato inválido. Por favor escanee el código datamatrix completo (el que contiene comas).");
             }
 
-            // 3. Extraemos la segunda parte, que es la que nos interesa
-            const extractedPastaValue = parts[1].trim(); // .trim() quita espacios accidentales
+            // 2. Dividimos el barcode escaneado por la coma
+            const parts = barcode.split(',');
 
-            // 4. Comparamos la parte extraída con el valor exacto de la receta
+            // 3. Verificamos que tenga estructura lógica (Lote, PN, ...)
+            if (parts.length < 2) {
+                throw new Error(`Formato de pasta incompleto. Se esperaba Lote,PN,... pero se recibió "${barcode}".`);
+            }
+
+            // 4. Extraemos la segunda parte (PN)
+            const extractedPastaValue = parts[1].trim(); 
+
+            // 5. Comparamos la parte extraída con el valor exacto de la receta
             if (extractedPastaValue !== model.pasta) {
                 throw new Error(`Pasta incorrecta. Requerida: ${model.pasta}, Valor extraído del escaneo: ${extractedPastaValue}.`);
             }
             
             return { success: true };
-        // --- FIN DE LA MODIFICACIÓN ---
             
         default:
             throw new Error('Paso de validación desconocido.');
@@ -213,34 +215,46 @@ async function verifyPastaLog(line, barcode, username) {
     }
 
     const lastLog = lastLogResult.rows[0];
-
-    // --- LÓGICA DE COMPARACIÓN FLEXIBLE ---
-    const dbPastaFull = lastLog.pasta_lot ? lastLog.pasta_lot.trim() : '';
     const scannedPastaFull = barcode.trim();
 
-    // Función auxiliar para extraer la parte importante (K01.005-00M-2)
-    // Asumimos que está en la posición 1 (después de la primera coma)
-    const extractPastaPart = (fullString) => {
-        const parts = fullString.split(',');
-        // Si el string tiene comas, devolvemos la segunda parte (índice 1)
-        // Si no tiene comas, devolvemos todo el string (por seguridad)
-        if (parts.length >= 2) {
-            return parts[1].trim(); 
-        }
-        return fullString;
-    };
+    // =================================================================
+    // VALIDACIÓN DE FORMATO: Debe tener comas
+    // =================================================================
+    // Verificamos si tiene al menos una coma. Si no, rechazamos.
+    if (!scannedPastaFull.includes(',')) {
+        throw new Error("Formato inválido. Por favor escanee el código datamatrix completo (el que contiene comas).");
+    }
 
-    const dbPart = extractPastaPart(dbPastaFull);
-    const scannedPart = extractPastaPart(scannedPastaFull);
+    // Extraemos las partes
+    const scannedParts = scannedPastaFull.split(',');
+    
+    // Aseguramos que tenga al menos la parte del medio (índice 1)
+    if (scannedParts.length < 2) {
+        throw new Error("El código escaneado no tiene el formato esperado (Lote,NoParte,...).");
+    }
+    
+    // Obtenemos la parte clave (K01.005-00M-2) que está en la posición 1
+    const scannedPart = scannedParts[1].trim();
 
-    // Validar: Comparamos SOLO la parte extraída
+    // =================================================================
+    // OBTENER EL VALOR DE LA BASE DE DATOS
+    // =================================================================
+    const dbPastaFull = lastLog.pasta_lot ? lastLog.pasta_lot.trim() : '';
+    
+    // Intentamos extraer la parte clave de la BD también
+    // (Si la BD tuviera basura sin comas, usamos el string completo para evitar crash, 
+    // pero idealmente siempre tendrá comas)
+    const dbParts = dbPastaFull.split(',');
+    const dbPart = dbParts.length >= 2 ? dbParts[1].trim() : dbPastaFull;
+
+    // =================================================================
+    // COMPARACIÓN
+    // =================================================================
     if (dbPart !== scannedPart) {
         throw new Error(`¡ERROR! La pasta escaneada (${scannedPart}) NO coincide con la actual en línea (${dbPart}).`);
     }
 
-    // 3. Si coincide, insertamos el nuevo log
-    // NOTA: Guardamos el barcode COMPLETO escaneado (scannedPastaFull), 
-    // para tener el registro exacto del lote nuevo, aunque solo hayamos validado la parte media.
+    // 3. Si coincide, insertamos el nuevo log (Guardamos el string COMPLETO nuevo)
     const insertQuery = `
         INSERT INTO production_log 
         (line_number, pn_pcb, model_name, model_side, pasta_lot, username, stencil_bc, squeegee_f_bc, squeegee_r_bc, squeegee_y_bc, plate_bc)
@@ -252,8 +266,8 @@ async function verifyPastaLog(line, barcode, username) {
         lastLog.pn_pcb, 
         lastLog.model_name, 
         lastLog.model_side, 
-        scannedPastaFull, // <--- Guardamos TODO el string nuevo
-        username,         // <--- Tu número de empleado corregido
+        scannedPastaFull, // Guardamos el string con el nuevo lote/fecha
+        username,         // El número de empleado
         lastLog.stencil_bc, 
         lastLog.squeegee_f_bc,
         lastLog.squeegee_r_bc,

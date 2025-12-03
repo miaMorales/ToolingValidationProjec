@@ -186,5 +186,5 @@ module.exports = {
     getRecipeDetails,
     createNewModel,
     getRecipesByLine,
-    getDistinctPastas // Exportar la nueva función
+    getDistinctPastas 
 };

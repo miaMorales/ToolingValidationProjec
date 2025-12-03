@@ -1,7 +1,3 @@
-/**
- * Una función "wrapper" para 'fetch' que automáticamente
- * añade el token JWT de localStorage a las cabeceras.
- */
 async function authFetch(url, options = {}) {
     const token = localStorage.getItem('token');
 
@@ -26,8 +22,6 @@ async function authFetch(url, options = {}) {
     // Realizar la petición
     const response = await fetch(url, newOptions);
 
-    // Si el token es inválido (401 o 403), el servidor lo rechazará.
-    // Redirigir al login.
     if (response.status === 401 || response.status === 403) {
         console.warn('Token inválido o expirado. Redirigiendo al login.');
         localStorage.removeItem('token');
@@ -35,7 +29,7 @@ async function authFetch(url, options = {}) {
         localStorage.removeItem('userName');
         // Redirigir a la página de inicio
         window.location.replace = '/index.html'; 
-        // Lanzar un error para detener la ejecución del código que llamó a authFetch
+        // error para detener la ejecución del código que llamó a authFetch
         throw new Error('No autorizado.'); 
     }
 

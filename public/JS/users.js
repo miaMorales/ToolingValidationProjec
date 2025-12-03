@@ -125,7 +125,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const safeNoEmployee = user.no_employee?.replace(/</g, "&lt;") || '';
             const safePrivilegeName = user.privilegeName?.replace(/</g, "&lt;") || 'Desconocido';
 
-            // Convertir privilegeName a formato JSON string para data attribute
             const userDataForEdit = JSON.stringify({
                 name: user.name,
                 lastName1: user.last_name1,
@@ -177,7 +176,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Asegurarse de que haya suficientes celdas antes de acceder por índice
             if (cells.length < Object.keys(filters).length) { // Compara con el número de filtros activos
-                row.style.display = 'none'; // Ocultar si la fila no tiene suficientes celdas (ej. fila de "no hay usuarios")
+                row.style.display = 'none'; 
                 return;
             }
 

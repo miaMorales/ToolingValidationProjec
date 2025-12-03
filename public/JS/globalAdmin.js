@@ -1,8 +1,7 @@
-// Poner esto en un script en adminIndex.html o un JS que se cargue allí
 document.addEventListener('DOMContentLoaded', () => {
     
     const privilege = localStorage.getItem('userPrivilege'); // Será "0", "1", o "2" (string)
-    const usersLink = document.getElementById('main-nav-links'); // <-- Debes poner este ID en tu HTML
+    const usersLink = document.getElementById('main-nav-links'); 
 
     if (usersLink && privilege == '2') { // Si NO es Admin (0)
         usersLink.style.display = 'none'; // Ocultar el enlace
@@ -16,9 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.replace('/index.html'); 
     }
 
-    // --- ASÍ ES CORRECTO ---
-    // 2. Busca el botón y asigna el evento DIRECTAMENTE
-    // (Esto funciona porque ya estamos dentro del listener principal)
+
     const logoutButton = document.getElementById('logout-button'); //
 
     if (logoutButton) {
@@ -33,7 +30,7 @@ let inactivityTimer;
 function logoutDueToInactivity() {
     alert("Se ha cerrado la sesión por inactividad.");
     
-    // Reutilizamos la lógica de logout (asegúrate de que esta función exista)
+    // Reutilizamos la lógica de logout 
     localStorage.removeItem('token');
     localStorage.removeItem('userPrivilege');
     localStorage.removeItem('userName');
@@ -47,11 +44,6 @@ function resetInactivityTimer() {
     // console.log("Timer reiniciado");
 }
 
-// 3. Escuchar la actividad del usuario en toda la página
-// 'mousemove': Mover el ratón
-// 'keydown': Presionar una tecla
-// 'click': Hacer clic
-// 'scroll': Mover el scroll
 window.addEventListener('mousemove', resetInactivityTimer);
 window.addEventListener('keydown', resetInactivityTimer);
 window.addEventListener('click', resetInactivityTimer);
@@ -59,6 +51,6 @@ window.addEventListener('scroll', resetInactivityTimer);
 
 // 4. Iniciar el temporizador por primera vez cuando se carga la página
 resetInactivityTimer();
-// Asigna esto a tu botón
+
 // document.getElementById('logout-button').addEventListener('click', handleLogout);
 });

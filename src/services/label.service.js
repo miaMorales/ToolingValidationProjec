@@ -4,7 +4,6 @@ const path = require('path');
 
 
 // --- Constantes ---
-// Asegúrate que esta ruta sea correcta desde donde se ejecuta tu script (usualmente la raíz del proyecto)
 const TEMPLATE_PATH = path.join(__dirname, '..', 'templates', 'labels.xlsx'); // Ajusta '../templates' si es necesario
 const QR_IMG_SIZE_PLATE = { width: 53, height: 53 }; // Tamaño del QR en Excel (pixels, ajustar)
 const QR_IMG_SIZE_SQUEEGEE = { width: 38, height: 38 }; // Tamaño del QR en Excel (pixels, ajustar)
@@ -239,8 +238,6 @@ async function getToolData(tools) {
     return results.filter(result => result !== null && result.data);
 }
 module.exports = {
-    getToolData, // Asegúrate que esta función exista y esté exportada si está en otro archivo
-    generateLabelExcel // La nueva función principal
+    getToolData, 
+    generateLabelExcel 
 };
-
-// Asegúrate de tener esta función si no está importada de otro lado

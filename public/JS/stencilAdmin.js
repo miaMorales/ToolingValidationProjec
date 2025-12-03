@@ -1,5 +1,3 @@
-// Contenido para: public/js/stencilAdmin.js
-
 document.addEventListener("DOMContentLoaded", () => {
   const searchInput = document.getElementById("general-search-input");
   const adminTableBody = document.querySelector(
@@ -27,7 +25,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const response = await authFetch(url);
           if (!response.ok) throw new Error('No se pudo cargar la imagen QR');
 
-          // 2. Convertimos la respuesta en un "Blob" (un archivo en memoria)
+          // 2. Convertimos la respuesta en un blob
           const imageBlob = await response.blob();
 
           // 3. Creamos una URL local para ese Blob
@@ -159,9 +157,6 @@ document.addEventListener("DOMContentLoaded", () => {
                   </button>
                 </td>
             `;
-            // ==========================================================
-            //  FIN DEL CAMBIO 2
-            // ==========================================================
 
             adminTableBody.appendChild(tr);
         });
@@ -302,7 +297,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const statusCheckboxes = document.querySelectorAll(".status-check-stencil");
   let originalStatus = "";
 
-  // (Tu código de limpieza de modal está bien como está)
   editModalEl.addEventListener("hidden.bs.modal", () => {
     const editForm = document.getElementById("editForm");
     if (editForm) {
@@ -350,13 +344,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const newStatusRequiresHistory =
       document.getElementById("edit-status-ng").checked ||
       document.getElementById("edit-status-mant").checked ||
-      document.getElementById("edit-status-baj").checked; // <-- AÑADIDO ESTO
+      document.getElementById("edit-status-baj").checked;
 
-    // 2. Revisa si el status ORIGINAL (cuando se abrió el modal) requería historial
     const originalStatusRequiredHistory =
       originalStatus === "NG" ||
       originalStatus === "MANT." ||
-      originalStatus === "BAJA"; // <-- AÑADIDO ESTO
+      originalStatus === "BAJA"; 
 
     // 3. Se debe mostrar si CUALQUIERA de los dos es verdadero
     const shouldShowHistory =
@@ -364,7 +357,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     historySection.style.display = shouldShowHistory ? "block" : "none";
 
-    // El resto de la función es igual...
     if (shouldShowHistory) {
       document.getElementById("edit-history-date-stencil").valueAsDate =
         new Date();
@@ -421,7 +413,6 @@ document.addEventListener("DOMContentLoaded", () => {
       editModal.show();
     });
 
-  // (Tu lógica de guardar cambios 'saveChangesBtn' y validación están bien)
   document
     .getElementById("saveChangesBtn")
     .addEventListener("click", async () => {
@@ -654,6 +645,5 @@ document.addEventListener("DOMContentLoaded", () => {
       input.addEventListener("input", applyHistoryFilters);
     });
 
-  // --- CARGA INICIAL DE DATOS ---
   loadStencils();
 });

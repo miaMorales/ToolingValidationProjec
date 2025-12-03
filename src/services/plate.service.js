@@ -99,9 +99,6 @@ ORDER BY ph.pl_h_date ASC;
   return rows;
 }
 
-// --- Lógica de Edición y Log ---
-// --- Lógica de Edición y Log ---
-
 async function updatePlateAndLogHistory(id, newData, user) {
   const client = await pool.connect();
   try {
@@ -117,9 +114,6 @@ async function updatePlateAndLogHistory(id, newData, user) {
       throw new Error("Plate no encontrado");
     }
 
-    // ====================================================================
-    //  CAMBIO EN LÓGICA DE HISTORIAL (Lógica de Responsable Corregida)
-    // ====================================================================
     let needsHistoryRecord = false;
     let historyComment = ""; // Inicia vacío
 
@@ -209,10 +203,6 @@ async function updatePlateAndLogHistory(id, newData, user) {
   }
 }
 
-// --- Lógica de Registro (Create) ---
-
-// En src/services/plate.service.js
-
 async function createPlate(data) {
   const client = await pool.connect();
   try {
@@ -282,7 +272,7 @@ async function createPlate(data) {
 //       de stencil.service o se replican aquí si es necesario.
 //       Incluiré los nombres aquí para que el controlador pueda llamarlos.
 
-// Replicando funciones de Stencil (Asume que estas funciones acceden a las tablas correctas)
+// Replicando funciones de Stencil 
 
 async function getAllSuppliers() {
   const sql = 'SELECT supp_name FROM suppliers ORDER BY supp_name';
@@ -393,7 +383,6 @@ module.exports = {
   getAllHistory,
   getBajaPlates,
   createPlate,
-  // Reutilizando las funciones de datos dinámicos
   getAllSuppliers,
   getPcbsByWorkline,
   getAllSeriesAndNextVersion,

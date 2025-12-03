@@ -1,9 +1,7 @@
-// Espera a que todo el HTML esté cargado para empezar a trabajar
 document.addEventListener("DOMContentLoaded", () => {
   const registroForm = document.getElementById("registroForm");
   if (!registroForm) return; // Si no encuentra el form, no hace nada
 
-  // --- LÓGICA PARA QUE LOS CHECKBOX DE "LADO" ACTÚEN COMO RADIOS ---
   const sideCheckboxes = [
     document.getElementById("ladoF"),
     document.getElementById("ladoR"),
@@ -20,15 +18,11 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
   });
-
-  // ==========================================================
-  //  INICIO DE LÓGICA DE VALIDACIÓN ACTUALIZADA
-  // ==========================================================
   registroForm.addEventListener("submit", async (event) => {
     event.preventDefault(); // Evita que la página se recargue
 
     let isValid = true;
-    const isNumericRegex = /^\d+$/; // Expresión regular para solo números enteros
+    const isNumericRegex = /^\d+$/; 
 
     // --- 1. Definir y Ocultar Errores Previos ---
     const fields = {
@@ -148,8 +142,6 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("ladoR").checked = false;
       document.getElementById("ladoY").checked = false;
 
-
-      // Opcional: Recarga la tabla principal y vuelve a la pestaña de administración
       if (typeof loadSqueegees === "function") {
         loadSqueegees();
       }

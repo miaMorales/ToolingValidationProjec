@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const platesTableBody = document.getElementById('plates-table-body');
     const searchInput = document.getElementById('table-search-input');
 
-    // --- Elementos del Modal de Edición ---
+    // --- Elementos del modal de edición ---
     const editModelBtn = document.getElementById('edit-model-btn');
     const editModalEl = document.getElementById('editModelModal');
     const editModal = new bootstrap.Modal(editModalEl);
@@ -66,7 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await authFetch(url);
             if (!response.ok) throw new Error('No se pudo cargar la imagen QR');
 
-            // 2. Convertimos la respuesta en un "Blob" (un archivo en memoria)
+            // 2. Convertimos la respuesta
             const imageBlob = await response.blob();
 
             // 3. Creamos una URL local para ese Blob
@@ -104,7 +104,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Carga de Detalles de Receta ---
     async function loadDetails() {
         try {
-            // Ya tenemos 'line' de la validación inicial
             const response = await authFetch(`/api/recipes/${encodeURIComponent(pn_pcb)}/${side}?line=${line}`);
             if (!response.ok) throw new Error('No se encontró la receta o hubo un error.');
 
@@ -136,7 +135,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- Funciones para Poblar Tablas ---
-    // (populateStencilsTable, populateSqueegeesTable, populatePlatesTable - Sin cambios)
 function populateStencilsTable(stencils) {
     stencilsTableBody.innerHTML = '';
     if (!stencils || stencils.length === 0) {
@@ -144,11 +142,10 @@ function populateStencilsTable(stencils) {
         return;
     }
     stencils.forEach((item, index) => {
-        // --- CAMBIO AQUÍ ---
+
         const qrCodeUrl = item.st_bc ? `/api/stencils/${item.st_id}/qr` : '';
         // Usamos data-src y la clase 'lazy-qr'
         const qrImage = qrCodeUrl ? `<img alt="Cargando QR..." class="table-qr lazy-qr" data-src="${qrCodeUrl}">` : '';
-        // --- FIN DEL CAMBIO ---
 
         const row = `
             <tr>
@@ -165,7 +162,6 @@ function populateStencilsTable(stencils) {
         stencilsTableBody.innerHTML += row;
     });
 
-    // --- CAMBIO AQUÍ: Llamar al helper después de llenar la tabla ---
     stencilsTableBody.querySelectorAll('.lazy-qr').forEach(img => loadProtectedImage(img));
 }
 
@@ -176,11 +172,9 @@ function populateSqueegeesTable(squeegees) {
         return;
     }
     squeegees.forEach((item, index) => {
-        // --- CAMBIO AQUÍ ---
+
         const qrCodeUrl = item.sq_bc ? `/api/squeegees/${item.sq_id}/qr` : '';
-        // Usamos data-src y la clase 'lazy-qr'
         const qrImage = qrCodeUrl ? `<img alt="Cargando QR..." class="table-qr lazy-qr" data-src="${qrCodeUrl}">` : '';
-        // --- FIN DEL CAMBIO ---
 
         const row = `
             <tr>
@@ -195,16 +189,13 @@ function populateSqueegeesTable(squeegees) {
         squeegeesTableBody.innerHTML += row;
     });
 
-    // --- CAMBIO AQUÍ: Llamar al helper después de llenar la tabla ---
     squeegeesTableBody.querySelectorAll('.lazy-qr').forEach(img => loadProtectedImage(img));
 }
 
 function populatePlatesTable(plates, usedPcb, originalPcb) {
     platesTableBody.innerHTML = '';
 
-    // 1. Lógica para mostrar aviso si se está usando un PCB diferente
     const platesTabPane = document.getElementById('plates-content');
-    // Buscamos si ya existe un aviso previo y lo borramos para no duplicar
     const existingAlert = document.getElementById('plate-pcb-alert');
     if (existingAlert) existingAlert.remove();
 

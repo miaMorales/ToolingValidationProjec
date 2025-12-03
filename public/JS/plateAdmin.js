@@ -306,11 +306,10 @@ async function loadPlates() {
 
         originalStatus = plate.pl_status.trim();
 
-        // Rellenar Modal
         document.getElementById("edit-pl-id").value = plate.pl_id;
         document.getElementById("edit-barcode").textContent = plate.pl_bc;
         const qrImgElement = document.getElementById("edit-qr-code");
-        qrImgElement.src = ""; // Pon un placeholder o déjalo vacío
+        qrImgElement.src = ""; 
         qrImgElement.alt = "Cargando QR...";
         qrImgElement.dataset.src = `/api/plates/${plate.pl_id}/qr`; // Asigna la URL al data-src
 
@@ -330,7 +329,7 @@ async function loadPlates() {
         const plateId = document.getElementById("edit-pl-id").value;
 
         // ==========================================================
-        //  NUEVO CÓDIGO: VALIDACIÓN CON LONGITUD
+        //  VALIDACIÓN CON LONGITUD
         // ==========================================================
         let isValid = true;
 
@@ -392,10 +391,6 @@ async function loadPlates() {
                 return; // Detiene el guardado
             }
         }
-        // ==========================================================
-        //  FIN DEL NUEVO CÓDIGO
-        // ==========================================================
-
 
         const dataToUpdate = {
             currentCycles: document.getElementById("edit-current-cycles").value,

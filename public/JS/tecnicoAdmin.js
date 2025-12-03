@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
   const privilege = localStorage.getItem("userPrivilege"); // Será "0", "1", o "2" (string)
-  const getUsersLink = document.getElementById("get-users"); // <-- Debes poner este ID en tu HTML
+  const getUsersLink = document.getElementById("get-users"); 
   if (getUsersLink && privilege == "1") {
     // Si NO es Admin (0)
     getUsersLink.style.display = "none"; // Ocultar el enlace

@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
         pastaSelect: pastaSelect,
         pastaOtro: pastaOtroInput,
         length: lengthInput
-        // No aplica a checkboxes directamente
+        // No aplica a checkboxes 
     };
 
     let currentRecipes = []; // Guarda las recetas de la línea activa
@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 modalInputs[key].classList.remove('is-invalid');
             }
         }
-        // Limpiar específicamente el error de checkboxes
+        // Limpiar el error de checkboxes
         if (errorDivs.lines) errorDivs.lines.style.display = 'none';
     }
 
@@ -132,14 +132,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- LÓGICA DEL MODAL DE "NUEVO MODELO" ---
 
-    // ***** AQUÍ SE AÑADIÓ EL LISTENER PARA EL BOTÓN '+' *****
-    // Event listener para el botón '+' que abre el modal
     addNewModelBtn.addEventListener('click', () => {
         // No necesitamos resetear el form aquí,
         // ya se hace en el evento 'show.bs.modal'
         newModelModal.show();
     });
-    // ***** FIN DEL BLOQUE AÑADIDO *****
 
     // Evento para cargar pastas cuando el modal está a punto de mostrarse
     newModelModalEl.addEventListener('show.bs.modal', async () => {
@@ -202,7 +199,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // 3. Validar QR (solo longitud si existe)
         const qrVal = qrInput.value.trim();
-        // Maxlength ya lo controla el HTML (no necesita validación JS si es opcional)
         
         // 4. Validar Pasta
         const pastaSelectVal = pastaSelect.value;
@@ -216,7 +212,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 showError('pastaOtro', 'Especifique la nueva pasta.');
                 isValid = false;
             }
-             // Maxlength ya lo controla el HTML
         }
 
         // 5. Validar Largo Squeegee
@@ -226,7 +221,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (!isNumericRegex.test(lengthVal)) {
             showError('length', 'Debe ser solo números enteros.'); isValid = false;
         }
-        // Maxlength ya lo controla el HTML
+
         const platePcbVal = platePcbInput ? platePcbInput.value.trim() : '';
         // 6. Validar Líneas de Trabajo
         const selectedLines = [];
@@ -272,11 +267,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (error) {
             console.error(error);
-             // Mostrar el mensaje específico del error (ej. "PN PCB ya existe")
+             // Mostrar el mensaje específico del error 
             alert(`Error al guardar: ${error.message}`);
         }
     });
 
-    // Carga inicial
     loadRecipesForLine('1');
-}); // Fin del DOMContentLoaded
+}); 

@@ -5,8 +5,8 @@ document.addEventListener("DOMContentLoaded", () => {
   if (!registroForm) return;
 
   // --- Regex de Validación ---
-  const isNumericRegex = /^\d+$/; // Solo números enteros, sin espacios
-  // Permite números como 123, 0.1, 0.15, 123.45. No permite '123.'
+  const isNumericRegex = /^\d+$/; 
+
   const isDecimalRegex = /^\d+(\.\d{1,2})?$/; 
 
   // --- Elementos del Formulario (Inputs) ---
