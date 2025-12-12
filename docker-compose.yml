@@ -19,7 +19,7 @@ services:
     build: . # Construye la imagen usando el Dockerfile en el directorio actual
     restart: always
     ports:
-      - "3000:3000" # Mapea el puerto 3000 de tu PC al puerto 3000 del contenedor
+      - "3211:3111" # Mapea el puerto 3211 (frontend) al puerto 3111 (backend) del contenedor
     volumes:
       - .:/usr/src/app # Sincroniza tu código local con el del contenedor para desarrollo
       - /usr/src/app/node_modules # Evita que tu node_modules local sobreescriba el del contenedor

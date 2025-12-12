@@ -3,8 +3,11 @@ const validationService = require('../services/validation.service');
 // Controlador para el escaneo
 async function handleScan(req, res) {
   try {
-    const { step, barcode, context } = req.body;
-    const result = await validationService.validateScan(step, barcode, context);
+    // AÑADIDO: Recibimos selectedPcb (puede venir undefined si es el primer intento)
+    const { step, barcode, context, selectedPcb } = req.body;
+    
+    // Pasamos selectedPcb al servicio
+    const result = await validationService.validateScan(step, barcode, context, selectedPcb);
     res.json(result);
   } catch (error) {
     res.status(400).json({ success: false, message: error.message });

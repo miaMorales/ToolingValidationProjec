@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const lengthInput = document.getElementById('new-model-length');
     const lineCheckboxes = document.querySelectorAll('input[name="work_lines"]');
     const platePcbInput = document.getElementById('new-model-plate-pcb');
+    const stencilPcbInput = document.getElementById('new-model-stencil-pcb');
     // Errores del Modal
     const errorDivs = {
         modelName: document.getElementById('new-model-name-error'),
@@ -223,6 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const platePcbVal = platePcbInput ? platePcbInput.value.trim() : '';
+        const stencilPcbVal = stencilPcbInput ? stencilPcbInput.value.trim() : '';
         // 6. Validar Líneas de Trabajo
         const selectedLines = [];
         lineCheckboxes.forEach((checkbox) => {
@@ -244,7 +246,8 @@ document.addEventListener('DOMContentLoaded', () => {
             pasta: finalPasta,
             length: lengthVal, // Ya validado como número
             lines: selectedLines,
-            plate_pcb: platePcbVal
+            plate_pcb: platePcbVal,
+            stencil_pcb: stencilPcbVal
         };
 
         try {

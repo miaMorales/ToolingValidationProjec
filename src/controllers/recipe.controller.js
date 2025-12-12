@@ -54,10 +54,15 @@ async function updateModelDetails(req, res) {
     try {
         const { pn_pcb, model_side } = req.params;
         const dataToUpdate = req.body;
-        const result = await recipeService.updateModelByIds(pn_pcb, model_side, dataToUpdate); // Llama al servicio
+        console.log('🎯 Controller - updateModelDetails:', { pn_pcb, model_side, dataToUpdate });
+        
+        const result = await recipeService.updateModelByIds(pn_pcb, model_side, dataToUpdate);
+        
+        console.log('✅ Controller - Actualización exitosa');
         res.json({ success: true, message: 'Modelo actualizado correctamente' });
     } catch (error) {
-        res.status(500).json({ message: 'Error al actualizar el modelo' });
+        console.error('❌ Controller - Error al actualizar:', error);
+        res.status(500).json({ message: 'Error al actualizar el modelo', error: error.message });
     }
 }
 

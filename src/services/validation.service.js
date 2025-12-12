@@ -1,24 +1,110 @@
 const pool = require('../db/pool');
-
-async function validateScan(step, barcode, context) {
+async function validateScan(step, barcode, context, selectedPcb = null) {
     let query, params;
-    
-    // Validación del Stencil (sin cambios)
+
+    // Validación del Stencil
     if (step === 'stencil') {
-        query = 'SELECT pn_pcb, model_side, st_status FROM stencils WHERE st_bc = $1';
+        // 1. Primero buscamos el/los stencil(s) con ese barcode
+        query = `
+            SELECT s.pn_pcb, s.model_side, s.st_status
+            FROM stencils s
+            WHERE s.st_bc = $1
+        `;
         params = [barcode];
-        const { rows } = await pool.query(query, params);
-        const item = rows[0];
-        if (!item) throw new Error('Stencil no encontrado.');
-        if (item.st_status !== 'OK') throw new Error(`El status del Stencil es ${item.st_status}, se requiere "OK".`);
-        return { success: true, nextContext: { pn_pcb: item.pn_pcb, model_side: item.model_side } };
+        const { rows: stencilRows } = await pool.query(query, params);
+
+        if (stencilRows.length === 0) throw new Error('Stencil no encontrado.');
+
+        // 2. Filtramos stencils que estén OK
+        const validStencils = stencilRows.filter(r => r.st_status === 'OK');
+        if (validStencils.length === 0) {
+            throw new Error(`El Stencil existe pero su estatus no es "OK" (${stencilRows[0].st_status}).`);
+        }
+
+        // 3. Por cada stencil válido, buscamos QUÉ MODELOS lo pueden usar
+        // Un modelo puede usar un stencil si:
+        //   a) El stencil tiene el mismo pn_pcb y model_side del modelo
+        //   b) O si el modelo tiene stencil_pcb apuntando al pn_pcb del stencil
+        
+        const allOptions = [];
+        
+        for (const stencil of validStencils) {
+            // a) Modelos que usan directamente este stencil (mismo pn_pcb)
+            const directQuery = `
+                SELECT pn_pcb, model_side, model_name
+                FROM models
+                WHERE pn_pcb = $1 AND model_side = $2
+            `;
+            const directResult = await pool.query(directQuery, [stencil.pn_pcb, stencil.model_side]);
+            
+            // b) Modelos que tienen stencil_pcb apuntando a este stencil
+            const indirectQuery = `
+                SELECT pn_pcb, model_side, model_name
+                FROM models
+                WHERE stencil_pcb = $1 AND model_side = $2
+            `;
+            const indirectResult = await pool.query(indirectQuery, [stencil.pn_pcb, stencil.model_side]);
+            
+            // Combinamos ambos resultados
+            allOptions.push(...directResult.rows, ...indirectResult.rows);
+        }
+
+        // 4. Eliminamos duplicados (por si acaso)
+        const uniqueOptions = Array.from(
+            new Map(allOptions.map(item => [`${item.pn_pcb}_${item.model_side}`, item])).values()
+        );
+
+        if (uniqueOptions.length === 0) {
+            throw new Error('No se encontraron modelos asociados a este stencil.');
+        }
+
+        let targetModel = null;
+
+        // 5. LÓGICA DE DESAMBIGUACIÓN
+        if (uniqueOptions.length > 1) {
+            // HAY MÁS DE UN MODELO QUE USA ESTE STENCIL
+
+            // CASO A: El usuario YA seleccionó uno (viene en selectedPcb)
+            if (selectedPcb) {
+                targetModel = uniqueOptions.find(m => m.pn_pcb === selectedPcb);
+                if (!targetModel) {
+                    throw new Error('El modelo seleccionado no coincide con el Stencil escaneado.');
+                }
+            }
+            // CASO B: No ha seleccionado nada, devolvemos las opciones al Frontend
+            else {
+                return {
+                    success: false,
+                    multipleMatches: true,
+                    options: uniqueOptions.map(m => ({
+                        pn_pcb: m.pn_pcb,
+                        model_name: m.model_name || 'Desconocido',
+                        model_side: m.model_side
+                    }))
+                };
+            }
+        } else {
+            // Solo hay un modelo posible, procedemos normal
+            targetModel = uniqueOptions[0];
+        }
+
+        // Si llegamos aquí, ya tenemos un targetModel definido
+        return {
+            success: true,
+            nextContext: {
+                pn_pcb: targetModel.pn_pcb,
+                model_side: targetModel.model_side
+            }
+        };
     }
 
+    // ... EL RESTO DEL CÓDIGO (Validación squeegee, plate, pasta) SE MANTIENE IGUAL ...
+    // (Solo copia y pega el resto de tu función validateScan original aquí abajo)
     if (!context || !context.pn_pcb || !context.model_side) {
         throw new Error('Contexto inválido. Escanee un stencil primero.');
     }
 
-    const modelQuery = 'SELECT length, pasta, plate_pcb FROM models WHERE pn_pcb = $1 AND model_side = $2';
+    const modelQuery = 'SELECT length, pasta, plate_pcb, stencil_pcb FROM models WHERE pn_pcb = $1 AND model_side = $2';
     const modelResult = await pool.query(modelQuery, [context.pn_pcb, context.model_side]);
     const model = modelResult.rows[0];
     if (!model) throw new Error('Receta no encontrada para el modelo y lado correspondientes.');
@@ -40,13 +126,13 @@ async function validateScan(step, barcode, context) {
             return { success: true };
 
         case 'plate':
-            // Lógica de Plate (sin cambios)
+            // Lógica de Plate
             query = 'SELECT pn_pcb, pl_status FROM plates WHERE pl_bc = $1';
             const { rows: plateRows } = await pool.query(query, [barcode]);
             const plate = plateRows[0];
             if (!plate) throw new Error('Plate no encontrado.');
             if (plate.pl_status !== 'OK') throw new Error(`El status del Plate es ${plate.pl_status}, se requiere "OK".`);
-            
+
             // Si el modelo tiene un 'plate_pcb' específico definido por el admin, usamos ese.
             // Si es null/vacío, usamos el pn_pcb del contexto (comportamiento normal).
             const requiredPlatePcb = model.plate_pcb || context.pn_pcb;
@@ -57,9 +143,9 @@ async function validateScan(step, barcode, context) {
             // --------------------------
 
             return { success: true };
-            
+
         // --- LÓGICA MODIFICADA PARA EXTRAER VALOR DE PASTA ---
-case 'pasta':
+        case 'pasta':
             if (!barcode) {
                 throw new Error('No se escaneó el barcode de la pasta.');
             }
@@ -78,25 +164,26 @@ case 'pasta':
             }
 
             // 4. Extraemos la segunda parte (PN)
-            const extractedPastaValue = parts[1].trim(); 
+            const extractedPastaValue = parts[1].trim();
 
             // 5. Comparamos la parte extraída con el valor exacto de la receta
             if (extractedPastaValue !== model.pasta) {
                 throw new Error(`Pasta incorrecta. Requerida: ${model.pasta}, Valor extraído del escaneo: ${extractedPastaValue}.`);
             }
-            
+
             return { success: true };
-            
+
         default:
             throw new Error('Paso de validación desconocido.');
     }
 }
 
+
 async function logProduction(logData) {
     // 1. Descomponemos los datos que nos pasó el CONTROLLER
     //    'user' (el inseguro) ya no existe, ahora tenemos 'userEmployee'
-    const { line, context, barcodes, userEmployee } = logData; 
-    
+    const { line, context, barcodes, userEmployee } = logData;
+
     const { pn_pcb, model_side } = context;
 
     // ... (la lógica para buscar model_name no cambia) ...
@@ -227,12 +314,12 @@ async function verifyPastaLog(line, barcode, username) {
 
     // Extraemos las partes
     const scannedParts = scannedPastaFull.split(',');
-    
+
     // Aseguramos que tenga al menos la parte del medio (índice 1)
     if (scannedParts.length < 2) {
         throw new Error("El código escaneado no tiene el formato esperado (Lote,NoParte,...).");
     }
-    
+
     // Obtenemos la parte clave (K01.005-00M-2) que está en la posición 1
     const scannedPart = scannedParts[1].trim();
 
@@ -240,7 +327,7 @@ async function verifyPastaLog(line, barcode, username) {
     // OBTENER EL VALOR DE LA BASE DE DATOS
     // =================================================================
     const dbPastaFull = lastLog.pasta_lot ? lastLog.pasta_lot.trim() : '';
-    
+
     // Intentamos extraer la parte clave de la BD también
     // (Si la BD tuviera basura sin comas, usamos el string completo para evitar crash, 
     // pero idealmente siempre tendrá comas)
@@ -262,13 +349,13 @@ async function verifyPastaLog(line, barcode, username) {
     `;
 
     await pool.query(insertQuery, [
-        line, 
-        lastLog.pn_pcb, 
-        lastLog.model_name, 
-        lastLog.model_side, 
+        line,
+        lastLog.pn_pcb,
+        lastLog.model_name,
+        lastLog.model_side,
         scannedPastaFull, // Guardamos el string con el nuevo lote/fecha
         username,         // El número de empleado
-        lastLog.stencil_bc, 
+        lastLog.stencil_bc,
         lastLog.squeegee_f_bc,
         lastLog.squeegee_r_bc,
         lastLog.squeegee_y_bc,

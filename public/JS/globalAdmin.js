@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         console.warn("No se encontró el botón con id 'logout-button'");
     }
-const INACTIVITY_TIME = 1 * 60 * 1000; // 5 minutos en milisegundos
+const INACTIVITY_TIME = 7 * 60 * 1000; // 7 minutos en milisegundos
 let inactivityTimer;
 
 // 1. Función que se ejecutará cuando se acabe el tiempo

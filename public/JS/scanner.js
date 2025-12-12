@@ -15,6 +15,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // Nuevos selectores para alertas
     const alertsTableBody = document.getElementById('alerts-table-body');
     const alertsBadge = document.getElementById('alerts-badge'); // Para notificaciones
+
+    // Referencias para el Modal de selección de modelo
+    const modelModalElement = document.getElementById('modelSelectionModal');
+    // IMPORTANTE: Asegúrate de que bootstrap.bundle.min.js esté cargado en tu HTML
+    const modelModal = new bootstrap.Modal(modelModalElement); 
+    const modelOptionsList = document.getElementById('model-options-list');
+    // -------------------------------------
+
     let state = {};
 
      mainTabs.forEach(tab => {
@@ -182,20 +190,52 @@ async function loadMaintenanceAlerts() {
         scanProgress.appendChild(li);
     }
     
-    async function handleScan() {
-        const barcode = scannerInput.value.trim();
+async function handleScan(selectedPcbOverride = null) {
+        // Si nos llaman desde el modal (override), usamos el barcode guardado en state
+        // Si es escaneo normal, leemos del input
+        const barcode = selectedPcbOverride ? state.barcodes[state.step] : scannerInput.value.trim();
+        
         if (!barcode) return;
+
         try {
+            // Construimos el body. Si hay override, lo enviamos.
+            const payload = { 
+                step: state.step, 
+                barcode: barcode, 
+                context: state.context 
+            };
+            
+            if (selectedPcbOverride) {
+                payload.selectedPcb = selectedPcbOverride;
+            }
+
             const response = await authFetch('/api/validation/scan', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ step: state.step, barcode: barcode, context: state.context })
+                body: JSON.stringify(payload)
             });
+
             const result = await response.json();
+
+            // CASO ESPECIAL: Múltiples coincidencias
+            if (result.multipleMatches) {
+                // Guardamos el barcode temporalmente en el state porque lo necesitaremos al re-enviar
+                state.barcodes[state.step] = barcode; 
+                showModelSelectionModal(result.options);
+                return; // Pausamos aquí, no seguimos
+            }
+
             if (!response.ok) throw new Error(result.message);
+
+            // -- FLUJO NORMAL (ÉXITO) --
+            // Si venía de modal, ocultarlo
+            modelModal.hide();
+
             state.barcodes[state.step] = barcode;
             addProgressItem(state.step, barcode);
+            
             if (result.nextContext) { state.context = result.nextContext; }
+            
             const currentStepIndex = state.steps.indexOf(state.step);
             if (currentStepIndex < state.steps.length - 1) {
                 state.step = state.steps[currentStepIndex + 1];
@@ -203,15 +243,47 @@ async function loadMaintenanceAlerts() {
                 state.step = null;
                 await logFinalResult();
             }
+
         } catch (error) {
             alert(`Error de validación: ${error.message}`);
+            // Si falló y teníamos el modal abierto, mejor cerrarlo para evitar inconsistencias
+            modelModal.hide(); 
         } finally {
-            scannerInput.value = '';
+            if (!selectedPcbOverride) {
+                scannerInput.value = '';
+            }
             updateUI();
-            scannerInput.focus();
+            // Solo hacemos focus si no hay modal abierto
+            if (!document.body.classList.contains('modal-open')) {
+                scannerInput.focus();
+            }
         }
     }
+function showModelSelectionModal(options) {
+        modelOptionsList.innerHTML = ''; // Limpiar anteriores
 
+        options.forEach(opt => {
+            const button = document.createElement('button');
+            button.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
+            button.innerHTML = `
+                <div>
+                    <strong>${opt.model_name}</strong>
+                    <br>
+                    <small class="text-muted">PN: ${opt.pn_pcb} (${opt.model_side})</small>
+                </div>
+                <i class="bi bi-chevron-right"></i>
+            `;
+            
+            // Al hacer click, re-llamamos a handleScan pero con la elección
+            button.addEventListener('click', () => {
+                handleScan(opt.pn_pcb);
+            });
+
+            modelOptionsList.appendChild(button);
+        });
+
+        modelModal.show();
+    }
     async function logFinalResult() {
         scanPrompt.textContent = 'Proceso de validación completo. Registrando...';
         try {

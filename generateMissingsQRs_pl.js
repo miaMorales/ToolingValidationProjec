@@ -8,7 +8,7 @@ const pool = new Pool({
   user: 'postgres',
   host: 'localhost',
   database: 'toolingValidation',
-  password: '1475', // Se recomienda usar variables de entorno para esto
+  password: '6235642', // Se recomienda usar variables de entorno para esto
   port: 5432,
 });
 

@@ -523,6 +523,16 @@ td {
     padding: 0.5rem 1rem;
     border-radius: 20px;
     border: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.reset-button-custom:hover {
+    background-color: #c82333;
+}
+
+.reset-button-custom:active {
+    background-color: #bd2130;
 }
 #scanner-input {
     position: absolute;

@@ -26,7 +26,7 @@ async function login(req, res) {
       privilege: user.privilege 
     };
   console.log(`[AUTH] Creando token. 'privilege' desde la BD es: ${user.privilege} (Tipo: ${typeof user.privilege})`);  
-    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '8h' });
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '7m' });
     
     console.log(`[AUTH] Éxito: No. Empleado '${clean_no_employee}' autenticado (Usuario: ${user.name}). Privilegio: ${user.privilege}`);
     

@@ -13,8 +13,8 @@ RUN npm install
 # Copia el resto de los archivos de tu proyecto al directorio de trabajo
 COPY . .
 
-# Expone el puerto 3000, que es donde corre tu servidor Express
-EXPOSE 3000
+# Expone el puerto 3111, que es donde corre tu servidor Express
+EXPOSE 3111
 
 # El comando que se ejecutará cuando el contenedor inicie
 CMD [ "node", "src/server.js" ]

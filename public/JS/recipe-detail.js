@@ -11,6 +11,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Elementos DOM Principales ---
     const recipeTitle = document.getElementById('main-recipe-title');
     const recipePN = document.getElementById('recipe-pn-display');
+    const recipePlatePcbInfo = document.getElementById('recipe-plate-pcb-info');
+    const recipeStencilPcbInfo = document.getElementById('recipe-stencil-pcb-info');
     const stencilsTableBody = document.getElementById('stencils-table-body');
     const squeegeesTableBody = document.getElementById('squeegees-table-body');
     const platesTableBody = document.getElementById('plates-table-body');
@@ -25,6 +27,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Inputs del Modal Edición
     const editQrInput = document.getElementById('edit-model-qr');
+    const editPlatePcbInput = document.getElementById('edit-model-plate-pcb');
+    const editStencilPcbInput = document.getElementById('edit-model-stencil-pcb');
     const editPastaSelect = document.getElementById('edit-model-pasta-select');
     const editPastaOtroContainer = document.getElementById('edit-model-pasta-otro-container');
     const editPastaOtroInput = document.getElementById('edit-model-pasta-otro');
@@ -112,7 +116,24 @@ document.addEventListener('DOMContentLoaded', () => {
             recipeTitle.textContent = `${data.model_name} ${data.model_side}`;
             recipePN.textContent = data.pn_pcb;
 
-            populateStencilsTable(data.stencils);
+            // Mostrar información de PCB compartido
+            if (recipePlatePcbInfo) {
+                if (data.plate_pcb_used && data.plate_pcb_used !== data.pn_pcb) {
+                    recipePlatePcbInfo.innerHTML = `<i class="bi bi-info-circle"></i> Plates: usando PCB <strong>${data.plate_pcb_used}</strong>`;
+                } else {
+                    recipePlatePcbInfo.textContent = '';
+                }
+            }
+
+            if (recipeStencilPcbInfo) {
+                if (data.stencil_pcb_used && data.stencil_pcb_used !== data.pn_pcb) {
+                    recipeStencilPcbInfo.innerHTML = `<i class="bi bi-info-circle"></i> Stencils: usando PCB <strong>${data.stencil_pcb_used}</strong>`;
+                } else {
+                    recipeStencilPcbInfo.textContent = '';
+                }
+            }
+
+            populateStencilsTable(data.stencils, data.stencil_pcb_used, data.pn_pcb);
             populateSqueegeesTable(data.squeegees);
             populatePlatesTable(data.plates, data.plate_pcb_used, data.pn_pcb);
         } catch (error) {
@@ -135,16 +156,39 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- Funciones para Poblar Tablas ---
-function populateStencilsTable(stencils) {
+function populateStencilsTable(stencils, stencilPcbUsed, currentPcb) {
     stencilsTableBody.innerHTML = '';
+
+    // 1. Identificar el contenedor de la pestaña (Tab Pane)
+    const stencilsTabPane = document.getElementById('stencils-content');
+    
+    // 2. Limpiar alerta previa si existe (para evitar duplicados al recargar)
+    const existingAlert = document.getElementById('stencil-pcb-alert');
+    if (existingAlert) existingAlert.remove();
+
+    // 3. NUEVA LÓGICA: Aviso estilo "Alerta" (Arriba de la tabla)
+    if (stencilPcbUsed && stencilPcbUsed !== currentPcb) {
+        const alertDiv = document.createElement('div');
+        alertDiv.id = 'stencil-pcb-alert'; // ID único para stencils
+        alertDiv.className = 'alert alert-info d-flex align-items-center mb-3'; // Mismo estilo que Plates
+        alertDiv.innerHTML = `
+            <i class="bi bi-info-circle-fill me-2"></i>
+            <div>
+                <strong>Nota:</strong> Este modelo usa stencils del modelo: <strong>${stencilPcbUsed}</strong>
+            </div>
+        `;
+        // Insertamos el aviso al principio del panel (antes de la tabla)
+        stencilsTabPane.prepend(alertDiv);
+    }
+    
+    // 4. Llenado normal de la tabla
     if (!stencils || stencils.length === 0) {
-        stencilsTableBody.innerHTML = '<tr><td colspan="8">No se encontraron stencils compatibles.</td></tr>';
+        stencilsTableBody.innerHTML = '<tr><td colspan="8" class="text-center">No se encontraron stencils compatibles.</td></tr>';
         return;
     }
+    
     stencils.forEach((item, index) => {
-
         const qrCodeUrl = item.st_bc ? `/api/stencils/${item.st_id}/qr` : '';
-        // Usamos data-src y la clase 'lazy-qr'
         const qrImage = qrCodeUrl ? `<img alt="Cargando QR..." class="table-qr lazy-qr" data-src="${qrCodeUrl}">` : '';
 
         const row = `
@@ -261,6 +305,8 @@ function populatePlatesTable(plates, usedPcb, originalPcb) {
 
             // Rellena QR y Largo
             editQrInput.value = modelData.model_qr || '';
+            if (editPlatePcbInput) editPlatePcbInput.value = modelData.plate_pcb || '';
+            if (editStencilPcbInput) editStencilPcbInput.value = modelData.stencil_pcb || '';
             editLengthInput.value = modelData.length || '';
             // Llenar select de Pasta
             editPastaSelect.innerHTML = '<option value="" selected disabled>Seleccionar existente</option>';
@@ -315,6 +361,7 @@ function populatePlatesTable(plates, usedPcb, originalPcb) {
     // 3. Evento para guardar los cambios (CON VALIDACIÓN)
 // 3. Evento para guardar los cambios (CON VALIDACIÓN)
     saveModelChangesBtn.addEventListener('click', async () => {
+        console.log("¡CLICK DETECTADO EN EL FRONTEND!");
         clearAllEditModalErrors();
         let isValid = true;
 
@@ -343,6 +390,9 @@ function populatePlatesTable(plates, usedPcb, originalPcb) {
             showEditError('length', 'Debe ser solo números enteros.'); isValid = false;
         }
 
+        // Obtener valores opcionales de plate_pcb y stencil_pcb
+        const platePcbVal = editPlatePcbInput ? editPlatePcbInput.value.trim() : '';
+        const stencilPcbVal = editStencilPcbInput ? editStencilPcbInput.value.trim() : '';
 
         if (!isValid) return;
 
@@ -350,7 +400,9 @@ function populatePlatesTable(plates, usedPcb, originalPcb) {
         const updatedData = {
             qr: qrVal,
             pasta: finalPasta,
-            length: lengthVal
+            length: lengthVal,
+            plate_pcb: platePcbVal,
+            stencil_pcb: stencilPcbVal
         };
 
         try {

@@ -31,7 +31,12 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 // Servir archivos estáticos (HTML, CSS, JS del frontend) desde la carpeta 'public'
 // Asumiendo que server.js está en 'src', subimos un nivel y entramos a 'public'
-app.use(express.static(path.join(__dirname, '..', 'public')));
+// Con caché de 1 día para mejorar el rendimiento
+app.use(express.static(path.join(__dirname, '..', 'public'), {
+    maxAge: '1d', // Cachear archivos estáticos por 1 día
+    etag: true,   // Habilitar ETags para validación de caché
+    lastModified: true
+}));
 
 // --- Montaje de Rutas API (todas bajo /api) ---
 app.use('/api', authRoutes); // Rutas de login: /api/login
@@ -63,6 +68,6 @@ app.get('/operadorIndex.html', (req, res) => {
 
 
 // --- Puerto y Arranque ---
-const PORT = process.env.PORT || 3000; // Usa variable de entorno si existe, si no, 3000
+const PORT = process.env.PORT || 3111; // Usa variable de entorno si existe, si no, 3111
 app.listen(PORT, () => console.log(`Servidor corriendo en http://localhost:${PORT}`));
 startMonitoring();
